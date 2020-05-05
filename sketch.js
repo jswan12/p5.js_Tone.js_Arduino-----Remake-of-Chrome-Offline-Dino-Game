@@ -1,4 +1,6 @@
 var dino;
+var health_Sprite0, health_Sprite1, health_Sprite2, health_Sprite3, healthSprites;
+var godmode_Interval, godmode_TimeLeft, godmode_LastingTime, lives;
 var ground_Sprite, ground1_Position, ground1_SpawnPoint, ground2_Position, ground2_SpawnPoint, ground_ScrollSpeed;
 var cloud_Sprite, cloud_SpawnPoint, cloud_TimeUntilNextSpawn, cloud_SpawnRate, cloud_ScrollSpeed, cloudsArray;
 var bird1_Sprite, bird2_Sprite, bird_SpawnPoint, bird_TimeUntilNextSpawn, bird_SpawnRate, bird_ScrollSpeed, birdsArray;
@@ -6,8 +8,13 @@ var cactus1_Sprite, cactus2_Sprite, cactus3_Sprite, cactus4_Sprite, cactus5_Spri
 var cacti_SpawnPoint, cacti_TimeUntilNextSpawn, cacti_SpawnRate, cacti_ScrollSpeed, cactiArray;
 var restart_button;
 
-function preload() {
+var multiPlayer, deathPlayer, jumpPlayer, reachedPointPlayer;
 
+function preload() {
+	health_Sprite0 = loadImage("health-0.png");
+	health_Sprite1 = loadImage("health-1.png");
+	health_Sprite2 = loadImage("health-2.png");
+	health_Sprite3 = loadImage("health-3.png");
 	ground_Sprite = loadImage("spritesheet.png");
 	cloud_Sprite = loadImage("1x-cloud.png");
 	bird1_Sprite = loadImage("enemy1.png");
@@ -21,6 +28,16 @@ function preload() {
 	button = createImg("1x-restart.png", "Play Again");
 	button.mousePressed(setup);
 	button.hide();
+
+	multiPlayer = new Tone.Players({
+		death: "./death.mp3",
+		jump: "./jump.mp3",
+		reachedPoint: "./reached-point.mp3"
+	  }, () => {
+		deathPlayer = multiPlayer.get("death");
+		jumpPlayer = multiPlayer.get("jump");
+		reachedPointPlayer = multiPlayer.get("reachedPoint");
+	  }).toMaster();
 }
 
 function setup() {
@@ -55,9 +72,13 @@ function setup() {
 	cacti_ScrollSpeed = ground_ScrollSpeed;
 	cacti_SpawnInterval = setInterval(function() {cacti_TimeUntilNextSpawn = cacti_TimeUntilNextSpawn>0?cacti_TimeUntilNextSpawn-1:0;}, 1000);
 
-
 	button.position(width/2, height/2-15);
 	button.hide();
+	
+	healthSprites = [health_Sprite0, health_Sprite1, health_Sprite2, health_Sprite3];
+	godmode_LastingTime = 2;
+	godmode_Interval = setInterval(function() {godmode_TimeLeft = godmode_TimeLeft>0?godmode_TimeLeft-1:0;}, 1000);
+	lives = 3;
 }
 
 function draw() {
@@ -79,12 +100,19 @@ function draw() {
 		else
 			dino.jump();
 		
-		if(dino.getCollisions(birdsArray[0])) {
-			cloud_ScrollSpeed = 0;
-			bird_ScrollSpeed = 0;
-			ground_ScrollSpeed = 0;
-			cacti_ScrollSpeed = 0;
-			dino.stop();
+		if(godmode_TimeLeft === 0) {
+			if(dino.getCollisions(birdsArray[0])) {
+				deathPlayer.start();
+				if(lives <= 1) {
+					cloud_ScrollSpeed = 0;
+					bird_ScrollSpeed = 0;
+					ground_ScrollSpeed = 0;
+					cacti_ScrollSpeed = 0;
+					dino.stop();
+				}
+				lives--;
+				godmode_TimeLeft = godmode_LastingTime;
+			}
 		}
 
 		fill(255, 204, 0);
@@ -104,6 +132,7 @@ function draw() {
 }
 
 function UpdateScene() {
+	manageLives();
 	manageGround();
 	manageClouds();
 	manageBirds();
@@ -214,9 +243,16 @@ function manageCacti() {
 	});
 }
 
+function manageLives() {
+	image(healthSprites[lives], 495, 10, 110, 30, 0, 30, 600, 180);
+}
+
 function keyPressed() {
 	if(keyCode === UP_ARROW && !dino.isJumping && !dino.isDead)
+	{
 		dino.startJump();
+		jumpPlayer.start();
+	}
 }
 
 function randomNumber(min, max) {
