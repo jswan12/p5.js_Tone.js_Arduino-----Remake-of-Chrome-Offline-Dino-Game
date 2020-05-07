@@ -51,7 +51,7 @@ function setup() {
 
 	ground1_Position = ground1_SpawnPoint = -2;
 	ground2_Position = ground2_SpawnPoint = 1198;
-	ground_ScrollSpeed = 5;
+	ground_ScrollSpeed = 6;
 
 	cloud_SpawnPoint = 600;
 	cloud_SpawnRate = 5;
@@ -63,17 +63,17 @@ function setup() {
 	}, 1000);
 
 	bird_SpawnPoint = 600;
-	bird_SpawnRate = 7.5;
+	bird_SpawnRate = 6.5;
 	bird_TimeUntilNextSpawn = 15; // used here for time until first spawn. // maybe change to 25 at release
 	birdsArray = [];
-	bird_ScrollSpeed = 4.75;
+	bird_ScrollSpeed = 7;
 	bird_SpawnInterval = setInterval(function() {
 		bird_TimeUntilNextSpawn = bird_TimeUntilNextSpawn > 0 ? bird_TimeUntilNextSpawn - 1 : 0;
 	}, 1000);
 
 	cacti_SpawnPoint = 600;
 	cacti_SpawnRate = 1;
-	cacti_TimeUntilNextSpawn = 4; // used here for time until first spawn.
+	cacti_TimeUntilNextSpawn = 2; // used here for time until first spawn.
 	cactiArray = [];
 	cacti_ScrollSpeed = ground_ScrollSpeed;
 	cacti_SpawnInterval = setInterval(function() {
@@ -115,7 +115,7 @@ function draw() {
 			dino.jump();
 
 		if (godmode_TimeLeft === 0) {
-			if (dino.getCollisions(birdsArray[0])) {
+			if (dino.getCollisions(birdsArray[0], cactiArray[0], cactiArray[1])) {
 				deathPlayer.start();
 				if (lives <= 1) {
 					cloud_ScrollSpeed = 0;
@@ -130,11 +130,11 @@ function draw() {
 		}
 
 		fill(255, 204, 0);
-		ellipse(50 + 20, dino.y, 2, 2);
-		ellipse(50 - 19, dino.y, 2, 2);
+		//ellipse(50 + 20, dino.y, 2, 2);
+		//ellipse(50 - 19, dino.y, 2, 2);
 
-		ellipse(50, dino.y - 21, 2, 2);
-		ellipse(50, dino.y + 18, 2, 2);
+		//ellipse(50, dino.y - 21, 2, 2);
+		//ellipse(50, dino.y + 18, 2, 2);
 	} else {
 		dino.stop();
 		clearInterval(cloud_SpawnInterval);
@@ -215,19 +215,19 @@ function manageBirds() {
 			if (!dino.isDead) {
 				if (bird.animate) {
 					image(bird1_Sprite, bird.x, bird.y - 30, 47, 36, 0, 0, 91, 67);
-					ellipse(bird.x, bird.y - 16, 2, 2);
-					ellipse(bird.x + 45, bird.y - 16, 2, 2);
+					//ellipse(bird.x, bird.y - 16, 2, 2);
+					//ellipse(bird.x + 45, bird.y - 16, 2, 2);
 
-					ellipse(bird.x + 22.5, bird.y, 2, 2);
-					ellipse(bird.x + 22.5, bird.y - 30, 2, 2);
+					//ellipse(bird.x + 22.5, bird.y, 2, 2);
+					//ellipse(bird.x + 22.5, bird.y - 30, 2, 2);
 
 				} else {
 					image(bird2_Sprite, bird.x, bird.y - 8 - 30, 47, 36, 0, 0, 87, 66);
-					ellipse(bird.x, bird.y - 16, 2, 2);
-					ellipse(bird.x + 45, bird.y - 16, 2, 2);
+					//ellipse(bird.x, bird.y - 16, 2, 2);
+					//ellipse(bird.x + 45, bird.y - 16, 2, 2);
 
-					ellipse(bird.x + 22.5, bird.y, 2, 2);
-					ellipse(bird.x + 22.5, bird.y - 30, 2, 2);
+					//ellipse(bird.x + 22.5, bird.y, 2, 2);
+					//ellipse(bird.x + 22.5, bird.y - 30, 2, 2);
 				}
 			} else
 				image(bird2_Sprite, bird.x, bird.y - 8 - 30, 47, 36, 0, 0, 87, 66);
@@ -242,17 +242,22 @@ function manageBirds() {
 function manageCacti() {
 	var cact = [cactus1_Sprite, cactus2_Sprite, cactus3_Sprite, cactus4_Sprite, cactus5_Sprite];
 
-	if (cactiArray.length < 3 && cacti_TimeUntilNextSpawn <= 0 && !dino.isDead) {
+	if (cactiArray.length < 6 && cacti_TimeUntilNextSpawn <= 0 && !dino.isDead) {
 		// highest spawn point @ 30
 		// lowest spawn point @ 75
 		cactiArray.push({
 			type: cact[random([0, 1, 2, 3, 4])],
 			x: cacti_SpawnPoint,
-			y: 100,
-			scaleBy: randomNumber(50, 150),
-			flip: random([true, false])
+			y: 100
 		});
-		cacti_TimeUntilNextSpawn = random(cacti_SpawnRate, cacti_SpawnRate+0.25);
+		cacti_TimeUntilNextSpawn = randomNumber(0.8, cacti_SpawnRate+0.5);
+		
+		if(random([true, false]))
+			cactiArray.push({
+			type: cact[random([0, 1, 2, 3, 4])],
+			x: cacti_SpawnPoint + 28,
+			y: 100
+		});
 	}
 
 	if (cactiArray[0] == undefined)
@@ -262,7 +267,17 @@ function manageCacti() {
 		if (cactus.x <= -25)
 			delete cactiArray[i];
 		else {
+			//var cactusScale;
+			//if(cactus.scaleBy != null) {
+				//cactusScale = cactus.scaleBy;
+				//processing.image(img, -img.width, 0);
+			//}
+			
 			image(cactus.type, cactus.x, cactus.y, 25, 50, 0, 0, 25, 50);
+			//ellipse(cactus.x, cactus.y+25, 2, 2);
+			//ellipse(cactus.x + 25, cactus.y+25, 2, 2); //cactus.y+((50+cactusScale)/2)
+
+			//ellipse(cactus.x + 12.5, cactus.y, 2, 2);
 			cactus.x -= cacti_ScrollSpeed;
 		}
 	});
